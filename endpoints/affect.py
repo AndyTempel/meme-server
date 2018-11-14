@@ -6,12 +6,15 @@ from PIL import Image
 from utils import http
 from utils.endpoint import Endpoint
 
+from math import pi, cos, sin
 
-class Ban(Endpoint):
+class Affect(Endpoint):
     def generate(self, avatars, text, usernames):
-        base = Image.open('assets/ban/ban.png').convert('RGBA')
-        avatar = Image.open(http.get_image(avatars[0])).resize((400, 400)).convert('RGBA')
-        base.paste(avatar, (70, 344), avatar)
+        avatar = http.get_image(avatars[0]).resize((200, 157)).convert('RGBA')
+        base = Image.open('assets/affect/affect.png').convert('RGBA')
+
+
+        base.paste(avatar, (180, 383, 380, 540), avatar)
 
         b = BytesIO()
         base.save(b, format='png')
@@ -20,4 +23,4 @@ class Ban(Endpoint):
 
 
 def setup():
-    return Ban()
+    return Affect()
