@@ -1,6 +1,6 @@
 from io import BytesIO
 
-from flask import send_file
+from aiohttp.web import Response as send_file
 from PIL import Image, ImageDraw, ImageFont
 
 from utils.endpoint import Endpoint
@@ -8,7 +8,7 @@ from utils.textutils import wrap
 
 
 class Tweet(Endpoint):
-    def generate(self, avatars, text, usernames):
+    async def generate(self, request, avatars, text, usernames):
         base = Image.open('assets/tweet/trump.jpg')
         font = ImageFont.truetype(font='assets/fonts/segoeuireg.ttf', size=50)
         canv = ImageDraw.Draw(base)
@@ -18,7 +18,7 @@ class Tweet(Endpoint):
         b = BytesIO()
         base.save(b, format='png')
         b.seek(0)
-        return send_file(b, mimetype='image/png')
+        return send_file(body=b, content_type='image/png')
 
 
 def setup():

@@ -1,7 +1,7 @@
 from io import BytesIO
 from random import randint
 
-from flask import send_file
+from aiohttp.web import Response as send_file
 from PIL import Image, ImageEnhance
 
 from utils import http, noisegen
@@ -9,8 +9,8 @@ from utils.endpoint import Endpoint
 
 
 class DeepFry(Endpoint):
-    def generate(self, avatars, text, usernames):
-        avatar = http.get_image(avatars[0]).resize((400, 400)).convert('RGBA')
+    async def generate(self, request, avatars, text, usernames):
+        avatar = Image.open(await http.get_image(request, avatars[0])).resize((400, 400)).convert('RGBA')
 
         joy, hand, hundred, fire = [
             Image.open(f'assets/deepfry/{asset}.png').resize((100, 100)).rotate(randint(-30, 30)).convert('RGBA')
@@ -31,7 +31,7 @@ class DeepFry(Endpoint):
         b = BytesIO()
         noise.save(b, format='png')
         b.seek(0)
-        return send_file(b, mimetype='image/png')
+        return send_file(body=b, content_type='image/png')
 
 
 def setup():

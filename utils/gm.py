@@ -1,12 +1,13 @@
-import subprocess
+import asyncio
 
 from utils.http import get_image_raw
 
 
-def convert(image: str, args: list, output_format: str):
-    img_bytes = get_image_raw(image)
+async def convert(request, image: str, args: list, output_format: str):
+    img_bytes = await get_image_raw(request, image)
     args = ['gm', 'convert', '-'] + args + ['{}:-'.format(output_format)]
 
-    proc = subprocess.Popen(args, stdout=subprocess.PIPE, stderr=subprocess.PIPE, stdin=subprocess.PIPE)
-    stdout, stderr = proc.communicate(img_bytes)
+    proc = await asyncio.create_subprocess_exec(args, stdout=asyncio.subprocess.PIPE, stderr=asyncio.subprocess.PIPE,
+                                                stdin=asyncio.subprocess.PIPE)
+    stdout, stderr = await proc.communicate(img_bytes)
     return stdout

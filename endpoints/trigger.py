@@ -1,7 +1,7 @@
 from io import BytesIO
 from random import randint
 
-from flask import send_file
+from aiohttp.web import Response as send_file
 from PIL import Image
 
 from utils import http
@@ -9,8 +9,8 @@ from utils.endpoint import Endpoint
 
 
 class Trigger(Endpoint):
-    def generate(self, avatars, text, usernames):
-        avatar = http.get_image(avatars[0]).resize((320, 320)).convert('RGBA')
+    async def generate(self, request, avatars, text, usernames):
+        avatar = Image.open(await http.get_image(request, avatars[0])).resize((320, 320)).convert('RGBA')
         triggered = Image.open('assets/triggered/triggered.jpg')
         tint = Image.open('assets/triggered/red.png').convert('RGBA')
         blank = Image.new('RGBA', (256, 256), color=(231, 19, 29))
@@ -36,7 +36,7 @@ class Trigger(Endpoint):
         b = BytesIO()
         frames[0].save(b, save_all=True, append_images=frames[1:], format='gif', loop=0, duration=20, disposal=2, optimize=True)
         b.seek(0)
-        return send_file(b, mimetype='image/gif')
+        return send_file(body=b, content_type='image/gif')
 
 
 def setup():

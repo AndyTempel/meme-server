@@ -1,32 +1,23 @@
 from datetime import datetime
 from io import BytesIO
 
-from flask import send_file
-from PIL import Image, ImageDraw, ImageFont, ImageOps
+from aiohttp.web import Response as send_file
+from PIL import Image, ImageDraw, ImageFont
 
 from utils import http
 from utils.endpoint import Endpoint
+from utils.imgutils import make_avatar_mask
 
 
 class Quote(Endpoint):
-    def generate(self, avatars, text, usernames):
-        avatar = http.get_image(avatars[0]).resize((150, 150))
+    async def generate(self, request, avatars, text, usernames):
+        avatar = Image.open(await http.get_image(request, avatars[0])).resize((150, 150))
         base = Image.new('RGBA', (1500, 300))
         font_med = ImageFont.truetype(font='assets/fonts/medium.woff', size=60)
         font_time = ImageFont.truetype(font='assets/fonts/medium.woff', size=40)
         font_sb = ImageFont.truetype(font='assets/fonts/semibold.woff', size=55)
 
-        poly = Image.new('RGBA', avatar.size)
-        pdraw = ImageDraw.Draw(poly)
-        pdraw.ellipse([(0, 0), *avatar.size], fill=(255, 255, 255, 255))
-        if poly.mode == 'RGBA':
-            r, g, b, a = poly.split()
-            rgb_image = Image.merge('RGB', (r, g, b))
-            inverted = ImageOps.invert(rgb_image)
-            r, g, b = inverted.split()
-            iv = Image.merge('RGBA', (r, g, b, a))
-        else:
-            iv = ImageOps.invert(poly)
+        iv = await make_avatar_mask(avatar)
 
         base.paste(avatar, (15, 75), mask=iv)
 
@@ -45,7 +36,7 @@ class Quote(Endpoint):
         b = BytesIO()
         downscaled.save(b, format='png')
         b.seek(0)
-        return send_file(b, mimetype='image/png')
+        return send_file(body=b, content_type='image/png')
 
 
 def setup():

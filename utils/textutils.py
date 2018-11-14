@@ -28,7 +28,7 @@ def wrap(font, text, line_width):
     return ('\n'.join(lines)).strip()
 
 
-def auto_text_size(text, font, desired_width, fallback_size=25, font_scalar=1):
+async def auto_text_size(text, font, desired_width, fallback_size=25, font_scalar=1):
     for size in range(20, 40):
         new_font = font.font_variant(size=floor(size * font_scalar))
         font_width, _ = new_font.getsize(text)

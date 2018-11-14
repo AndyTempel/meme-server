@@ -1,24 +1,83 @@
+<!DOCTYPE html>
+<html prefix="og: http://ogp.me/ns#">
 <head>
-  {% include "partials/header.html" %}
-  <script src="/assets/tablesort.js"></script>
-</head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>RickBot :: IMG GEN</title>
+    <meta name="Description"
+          content="Discord chat and voice bot, that will satisfy your rick-rolling needs. It also comes with moderation and a lot more fun commands.">
+    <meta name="Keywords" content="discord, bot, discord bot, rickroll, rickrolling, moderation, fun, chat">
+    <meta name="Author" content="KSoft.Si - AK">
+    <meta name="twitter:card" content="summary"/>
+    <meta name="twitter:title" content="RickBot :: Home">
+    <meta name="twitter:description"
+          content="Discord chat and voice bot, that will satisfy your rick-rolling needs. It also comes with moderation and a lot more fun commands.">
+    <meta name="twitter:image" content="https://rickbot.ksoft.si/static/img/full_rick.jpg">
+    <meta property="og:title" content="RickBot :: Home"/>
+    <meta property="og:url" content="https://rickbot.ksoft.si/"/>
+    <meta property="og:description"
+          content="Discord chat and voice bot, that will satisfy your rick-rolling needs. It also comes with moderation and a lot more fun commands.">
+    <meta property="og:image" content="https://rickbot.ksoft.si/static/img/full_rick.jpg"/>
+    <link rel="stylesheet" href="https://cdn.ksoft.si/_generic/css/bulma.css">
+    <style>
+        .center-table th {
+            text-align: center;
+            vertical-align: middle;
+        }
 
+        .center-table td {
+            text-align: center;
+            vertical-align: middle;
+        }
+    </style>
+</head>
 <body>
-  <div class="content">
-    {% include "partials/navbar.html" %}
-    <table class="stats" id="gen-stats">
-      <tr>
-        <th onclick="sortTable(0)">Endpoint</th>
-        <th onclick="sortTable(1)">Hits</th>
-        <th onclick="sortTable(2)">Avg. Gen Time</th>
-      </tr>
-      {% for ep in data %}
-      <tr>
-        <td>{{ep}}</td>
-        <td>{{data[ep]["hits"]}} hits</td>
-        <td>{{data[ep]["avg_gen_time"]}} ms</td>
-      </tr>
-      {% endfor %}
-    </table>
-  </div>
+<section class="hero is-info">
+    <div class="hero-body">
+        <div class="container has-text-centered">
+            <img style="margin: auto;cursor: pointer;max-height: 6rem"
+                 src="https://is-going-to-rickroll.me/static/img/logo.png" alt="RickBot"
+                 onclick="window.location.href = 'https://is-going-to-rickroll.me/'">
+        </div>
+    </div>
+</section>
+<section class="section has-background-grey-dark">
+    <div class="container has-background-grey-dark">
+        <h1 class="subtitle has-text-centered has-text-light is-uppercase">Image generation and manipulation</h1>
+        <p class="has-text-centered has-text-light">Based on Dank Memer's ImgGen, but converted from <del>shitty</del> devoxinware to much better, faster and async naniware.</p>
+        <br><br>
+        <table class="table is-fullwidth has-background-grey-dark has-text-light center-table is-size-5">
+            <thead>
+            <tr>
+                <th class="has-text-light" style="width: 33%">Endpoint</th>
+                <th class="has-text-light" style="width: 33%">Hits</th>
+                <th class="has-text-light" style="width: 33%">Average time</th>
+                <!-- I know using % is gae and eww, shut up I'm lazy -->
+            </tr>
+            </thead>
+            <tbody>
+            {% for ep in data %}
+            <tr>
+                <td>{{ep}}</td>
+                <td>{{data[ep]["hits"]}} hits</td>
+                <td>{{data[ep]["avg_gen_time"]}} ms</td>
+            </tr>
+            {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</section>
+<footer class="footer">
+    <div class="container">
+        <div class="content has-text-centered"><p><strong>RickBot</strong> by <a href="http://github.com/AndyTempel"
+                                                                                 target="_blank" rel=noopener>Andraž
+            Korenč</a><span> &copy; 2018 All Rights Reserved</span>
+            <p><a href="https://discordbots.org/bot/349289613593935893" target="_blank" rel=noopener><img
+                    src="https://discordbots.org/api/widget/status/349289613593935893.png"
+                    alt="Discord Bots - RickBot Status"/></a>
+            <p><a class="icon" href="https://github.com/AndyTempel/"><i class="fab fa-github"></i></a></p>
+        </div>
+    </div>
+</footer>
 </body>
+</html>

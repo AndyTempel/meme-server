@@ -1,6 +1,6 @@
 from io import BytesIO
 
-from flask import send_file
+from aiohttp.web import Response as send_file
 from PIL import Image, ImageDraw, ImageFont
 
 from utils.endpoint import Endpoint
@@ -8,7 +8,7 @@ from utils.textutils import wrap
 
 
 class Brain(Endpoint):
-    def generate(self, avatars, text, usernames):
+    async def generate(self, request, avatars, text, usernames):
         base = Image.open('assets/brain/brain.jpg')
         font = ImageFont.truetype('assets/fonts/verdana.ttf', size=30)
 
@@ -28,7 +28,7 @@ class Brain(Endpoint):
         b = BytesIO()
         base.save(b, format='png')
         b.seek(0)
-        return send_file(b, mimetype='image/png')
+        return send_file(body=b, content_type='image/png')
 
 
 def setup():

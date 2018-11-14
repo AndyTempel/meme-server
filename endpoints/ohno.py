@@ -1,14 +1,14 @@
 from io import BytesIO
 
 from PIL import Image, ImageDraw, ImageFont
-from flask import send_file
+from aiohttp.web import Response as send_file
 
 from utils.endpoint import Endpoint
 from utils.textutils import wrap
 
 
 class Ohno(Endpoint):
-    def generate(self, avatars, text, usernames):
+    async def generate(self, request, avatars, text, usernames):
         base = Image.open('assets/ohno/ohno.png').convert('RGBA')
         font = ImageFont.truetype(font='assets/fonts/sans.ttf', size=16 if len(text) > 38 else 32)
         canv = ImageDraw.Draw(base)
@@ -19,7 +19,7 @@ class Ohno(Endpoint):
         b = BytesIO()
         base.save(b, format='png')
         b.seek(0)
-        return send_file(b, mimetype='image/png')
+        return send_file(body=b, content_type='image/png')
 
 
 def setup():

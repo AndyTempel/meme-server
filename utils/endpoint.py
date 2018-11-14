@@ -28,10 +28,10 @@ class Endpoint(ABC):
         return round(
             sum(self.avg_generation_times) / len(self.avg_generation_times), 2)
 
-    def run(self, key, **kwargs):
+    async def run(self, key, **kwargs):
         self.hits += 1
         start = time()
-        res = self.generate(**kwargs)
+        res = await self.generate(**kwargs)
         t = round((time() - start) * 1000, 2)  # Time in ms, formatted to 2dp
         self.avg_generation_times.append(t)
         k = r.table('keys').get(key).run(self.rdb)
@@ -44,7 +44,7 @@ class Endpoint(ABC):
         return res
 
     @abstractmethod
-    def generate(self, avatars, text, usernames):
+    async def generate(self, request, avatars, text, usernames):
         raise NotImplementedError(
             f"generate has not been implemented on endpoint {self.name}"
         )

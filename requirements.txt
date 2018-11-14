@@ -1,6 +1,8 @@
-flask
 pillow
-requests
 wand
+aiohttp
+aiofiles
+aiohttp-jinja2
+aiohttp-debugtoolbar
 rethinkdb
 requests_oauthlib

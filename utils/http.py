@@ -1,15 +1,32 @@
 from io import BytesIO
 
-import requests
-from PIL import Image
+
+async def get_image(request, url):
+    async with request.app['client_session'].get(url) as response:
+        if response.status != 200:
+            raise Exception("Server returned an error: {}".format(response.status))
+        f_handle = BytesIO()
+        while True:
+            chunk = await response.content.read(1024)
+            if not chunk:
+                break
+            f_handle.write(chunk)
+        await response.release()
+        f_handle.seek(0)
+        return f_handle
 
 
-def get_image(url):
-    try:
-        return Image.open(BytesIO(requests.get(url, stream=True).content))
-    except OSError:
-        raise TypeError('An invalid image was provided! Check the URL and try again.')
+async def get_image_raw(request, url):
+    async with request.app['client_session'].get(url) as response:
+        if response.status != 200:
+            raise Exception("Server returned an error: {}".format(response.status))
+        out = await response.read()
+        await response.release()
+        return out
 
-
-def get_image_raw(url):
-    return requests.get(url, stream=True).content
+# def get_image(url):
+#     return BytesIO(requests.get(url, stream=True).content)
+#
+#
+# def get_image_raw(url):
+#     return requests.get(url, stream=True).content

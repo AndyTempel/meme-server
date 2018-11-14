@@ -1,16 +1,16 @@
 from io import BytesIO
 
 from PIL import Image
-from flask import send_file
+from aiohttp.web import Response as send_file
 
 from utils import http
 from utils.endpoint import Endpoint
 
 
 class Fedora(Endpoint):
-    def generate(self, avatars, text, usernames):
+    async def generate(self, request, avatars, text, usernames):
         base = Image.open('assets/fedora/fedora.png').convert('RGBA')
-        avatar = http.get_image(avatars[0]).resize((275, 275)).convert('RGBA')
+        avatar = Image.open(await http.get_image(request, avatars[0])).resize((275, 275)).convert('RGBA')
         final_image = Image.new('RGBA', base.size)
 
         # Put the base over the avatar
@@ -20,7 +20,7 @@ class Fedora(Endpoint):
         b = BytesIO()
         final_image.save(b, format='png')
         b.seek(0)
-        return send_file(b, mimetype='image/png')
+        return send_file(body=b, content_type='image/png')
 
 
 def setup():

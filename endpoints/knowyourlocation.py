@@ -1,14 +1,14 @@
 from io import BytesIO
 
 from PIL import Image, ImageDraw, ImageFont
-from flask import send_file
+from aiohttp.web import Response as send_file
 
 from utils.endpoint import Endpoint
 from utils.textutils import auto_text_size
 
 
 class KnowYourLocation(Endpoint):
-    def generate(self, avatars, text, usernames):
+    async def generate(self, request, avatars, text, usernames):
         base = Image.open('assets/knowyourlocation/knowyourlocation.jpg').convert('RGBA')
         # We need a text layer here for the rotation
         canv = ImageDraw.Draw(base)
@@ -20,8 +20,8 @@ class KnowYourLocation(Endpoint):
 
         top, bottom = text
 
-        top_font, top_text = auto_text_size(top, ImageFont.truetype(font='assets/fonts/sans.ttf'), 630)
-        bottom_font, bottom_text = auto_text_size(bottom, ImageFont.truetype(font='assets/fonts/sans.ttf'), 539)
+        top_font, top_text = await auto_text_size(top, ImageFont.truetype(font='assets/fonts/sans.ttf'), 630)
+        bottom_font, bottom_text = await auto_text_size(bottom, ImageFont.truetype(font='assets/fonts/sans.ttf'), 539)
 
         canv.text((64, 131), top_text, font=top_font, fill='Black')
         canv.text((120, 450), bottom_text, font=bottom_font, fill='Black')
@@ -29,7 +29,7 @@ class KnowYourLocation(Endpoint):
         b = BytesIO()
         base.save(b, format='png')
         b.seek(0)
-        return send_file(b, mimetype='image/png')
+        return send_file(body=b, content_type='image/png')
 
 
 def setup():
