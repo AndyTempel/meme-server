@@ -47,7 +47,7 @@ def init_app():
     from utils.endpoint import endpoints as endpnts
     global endpoints
     endpoints = endpnts
-    import endpoints as _
+    import endpoints as _  # noqa: F401
 
 
 def require_authorization(func):
@@ -80,7 +80,7 @@ def index():
 
 @app.route('/endpoints.json', methods=['GET'])
 def endpoints():
-    return jsonify({"endpoints": [{'name': x, 'parameters': y.params} for x, y in sorted(endpoints.items())]})
+    return jsonify({"endpoints": [{'name': x, 'parameters': y.params} for x, y in endpoints.items()]})
 
 
 @app.route('/documentation')
@@ -113,11 +113,7 @@ def api(endpoint):
                                          usernames=usernames)
     except Exception as e:
         print(e, ''.join(traceback.format_tb(e.__traceback__)))
-        return jsonify({'status': 500, 'error': str(e), 'sent_data': {
-            "text": text,
-            "avatars": avatars,
-            "usernames": usernames
-        }}), 500
+        return jsonify({'status': 500, 'error': str(e)}), 500
     return result, 200
 
 
