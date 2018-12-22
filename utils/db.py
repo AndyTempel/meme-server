@@ -1,20 +1,21 @@
 import json
 
 import redis
-import rethinkdb as r
 from flask import g
-
+from utils.rethink import Rethink
+from utils.mongo import Mongo
 config = json.load(open('config.json'))
-
-RDB_ADDRESS = config['rdb_address']
-RDB_PORT = config['rdb_port']
-RDB_DB = config['rdb_db']
 
 
 def get_db():
-    if 'rdb' not in g:
-        g.rdb = r.connect(RDB_ADDRESS, RDB_PORT, db=RDB_DB)
-    return g.rdb
+    if config['db'] == 'rethink':
+        if 'rethink' not in g:
+            g.rethink = Rethink()
+        return g.rethink
+    elif config['db'] == 'mongo':
+        if 'mongo' not in g:
+            g.mongo = Mongo()
+        return g.mongo
 
 
 def get_redis():
