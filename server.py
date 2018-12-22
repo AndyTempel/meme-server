@@ -10,6 +10,7 @@ from flask import Flask, render_template, request, g, jsonify
 from dashboard import dash
 from utils.db import get_db
 from utils.ratelimits import ratelimit
+from utils.exceptions import BadRequest
 
 # Initial require, the above line contains our endpoints.
 
@@ -96,23 +97,35 @@ def api(endpoint):
         return jsonify({'status': 404, 'error': 'Endpoint {} not found!'.format(endpoint)}), 404
     if request.method == 'GET':
         text = request.args.get('text', '')
-        avatars = [x for x in [request.args.get('avatar1', None), request.args.get('avatar2', None)] if x]
+        avatars = [x for x in [request.args.get('avatar1', request.args.get('image', None)),
+                               request.args.get('avatar2', None)] if x]
         usernames = [x for x in [request.args.get('username1', None), request.args.get('username2', None)] if x]
+        kwargs = {}
+        for arg in request.args:
+            if arg not in ['text', 'username1', 'username2', 'avatar1', 'avatar2']:
+                kwargs[arg] = request.args.get(arg)
     else:
         if not request.is_json:
             return jsonify({'status': 400, 'message': 'when submitting a POST request you must provide data in the '
                                                       'json format'}), 400
         request_data = request.json
         text = request_data.get('text', '')
-        avatars = list(request_data.get('avatars', []))
+        avatars = list(request_data.get('avatars', list(request_data.get('images', []))))
         usernames = list(request_data.get('usernames', []))
+        kwargs = {}
+        for arg in request_data:
+            if arg not in ['text', 'avatars', 'usernames']:
+                kwargs[arg] = request_data.get(arg)
     try:
         result = endpoints[endpoint].run(key=request.headers.get('authorization'),
                                          text=text,
                                          avatars=avatars,
-                                         usernames=usernames)
+                                         usernames=usernames,
+                                         kwargs=kwargs)
+    except BadRequest as br:
+        return jsonify({'status': 400, 'error': str(br)}), 400
     except Exception as e:
-        print(e, ''.join(traceback.format_tb(e.__traceback__)))
+        traceback.print_exc()
         return jsonify({'status': 500, 'error': str(e)}), 500
     return result, 200
 
