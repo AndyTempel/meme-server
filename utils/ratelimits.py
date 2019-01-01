@@ -2,11 +2,13 @@ import json
 from datetime import datetime, timedelta
 
 import requests
+import jinja2
 from flask import request, make_response, jsonify
 
 from utils.db import get_db
 
 config = json.load(open('config.json'))
+render_env = jinja2.Environment(loader=jinja2.FileSystemLoader('views/emails'))
 
 
 class RatelimitCache(object):
@@ -69,12 +71,24 @@ def ratelimit(func, max_usage=5):
             else:
                 ratelimit_reached = key.get('ratelimit_reached', 0) + 1
                 get_db().update('keys', auth, {"ratelimit_reached": ratelimit_reached})
-                if ratelimit_reached % 5 == 0 and 'webhook_url' in config:
-                    requests.post(config['webhook_url'],
-                                  json={"embeds": [{
-                                      "title": f"Application '{key['name']}' ratelimited 5 times!",
-                                      "description": f"Owner: {key['owner']}\n"
-                                      f"Total: {ratelimit_reached}"}]})
+                if ratelimit_reached % 5 == 0:
+                    if 'webhook_url' in config:
+                        requests.post(config['webhook_url'],
+                                      json={"embeds": [{
+                                          "title": f"Application '{key['name']}' ratelimited 5 times!",
+                                          "description": f"Owner: {key['owner']}\n"
+                                          f"Total: {ratelimit_reached}"}]})
+                    requests.post(f"https://{config['postal_host']}/api/v1/send/message", headers={
+                        "X-Server-API-Key": config['postal_key']
+                    }, json={
+                        "to": [key['email']], "from": "RickBot Services <services@is-going-to-rickroll.me>",
+                        "subject": "Rate-limit has been hit 5 times!",
+                        "tag": "imggen", "html_body": render_env.get_template('rate_limit.html').render({
+                            "app": key,
+                            "total_hits": ratelimit_reached,
+                            "client_ip": request.remote_addr
+                        })
+                    })
                 return make_response((jsonify({'status': 429, 'error': 'You are being ratelimited'}), 429,
                                       {'X-RateLimit-Limit': max_usage,
                                        'X-RateLimit-Remaining': 0,

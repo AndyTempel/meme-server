@@ -1,0 +1,41 @@
+<!doctype html>
+<html lang="en">
+<head>
+    <meta name="viewport" content="width=device-width"/>
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8"/>
+    <title>{% block title %}{% endblock %}</title>
+    <style>{% include 'globals.css' %}</style>
+</head>
+<body class="">
+<table role="presentation" border="0" cellpadding="0" cellspacing="0" class="body">
+    <tr>
+        <td>&nbsp;</td>
+        <td class="container">
+            <div class="content">
+                <span class="preheader">{% block pretext %}{% endblock %}</span>
+                <table role="presentation" class="main">
+                    {% block body %}{% endblock %}
+                </table>
+                <div class="footer">
+                    <table role="presentation" border="0" cellpadding="0" cellspacing="0">
+                        <tr>
+                            <td class="content-block">
+                                <span class="apple-link">KSoft.Si Development Team & RickBot</span>
+                                <br> Want to join us on <a href="https://discord.gg/p5js3NT">Discord</a>?
+                                <br> To contact support, write to us at <a href="mailto:support@ksoft.si">support@ksoft.si</a>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td class="content-block powered-by">
+                                Powered by <a href="https://api.ksoft.si">KSoft.Si API</a> & Python.
+                            </td>
+                        </tr>
+                    </table>
+                </div>
+            </div>
+        </td>
+        <td>&nbsp;</td>
+    </tr>
+</table>
+</body>
+</html>

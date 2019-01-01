@@ -104,3 +104,5 @@ keys.json
 config.json
 
 .idea/
+
+migrate.py
