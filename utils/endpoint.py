@@ -4,59 +4,40 @@ from time import perf_counter
 from utils import fixedlist
 from utils.db import get_db, get_redis
 from .asset_cache import AssetCache
+from utils.ratelimits import RatelimitCache
+
+from datetime import timedelta
 
 asset_cache = AssetCache()
 redis = get_redis()
 endpoints = {}
 
-
-class RedisFixedList:
-    def __init__(self, key: str):
-        self._keys = ("%s-usage" % key, "%s-times" % key)
-
-    @property
-    def hits(self):
-        return int(redis.get(self._keys[0]) or 0)
-
-    @property
-    def list(self):
-        return [float(x) for x in redis.lrange(self._keys[1], 0, 20)]
-
-    def __len__(self):
-        return redis.llen(self._keys[1])
-
-    def __iter__(self):
-        for x in redis.get(self._keys[1]) or []:
-            yield float(x)
-
-    def increment(self):
-        redis.incr(self._keys[0])
-        return self
-
-    def append(self, value):
-        redis.lpush(self._keys[1], value)
-        redis.ltrim(self._keys[1], 0, 20)
+buckets = {}
 
 
 class Endpoint(ABC):
-    def __init__(self, cache):
-        self.avg_generation_times = RedisFixedList(self.name)
-        self.hits = self.avg_generation_times.hits
+    def __init__(self, cache, rate, per):
+        self.avg_generation_times = fixedlist.FixedList(name=self.name, maximum_item_count=20)
         self.assets = cache
+        self.rate = rate
+        self.per = per
 
     @property
     def name(self):
         return self.__class__.__name__.lower()
 
+    @property
+    def bucket(self):
+        return buckets.get(self.name)
+
     def get_avg_gen_time(self):
-        if len(self.avg_generation_times) == 0:
+        if self.avg_generation_times.len() == 0:
             return 0
 
-        return round(sum(self.avg_generation_times.list) / len(self.avg_generation_times), 2)
+        return round(self.avg_generation_times.sum(), 2)
 
     def run(self, key, **kwargs):
-        self.avg_generation_times.increment()
-        self.hits = self.avg_generation_times.hits
+        get_redis().incr(self.name + ':hits')
         start = perf_counter()
         res = self.generate(**kwargs)
         t = round((perf_counter() - start) * 1000, 2)  # Time in ms, formatted to 2dp
@@ -73,7 +54,16 @@ class Endpoint(ABC):
         )
 
 
-def setup(klass):
-    kls = klass(asset_cache)
-    endpoints[kls.name] = kls
-    return kls
+def setup(klass=None, rate=5, per=1):
+    if klass:
+        kls = klass(asset_cache, rate, per)
+        endpoints[kls.name] = kls
+        buckets[kls.name] = RatelimitCache(name=kls.name, expire_time=timedelta(0, per, 0))
+        return kls
+    else:
+        def wrapper(klass, *a, **ka):
+            kls = klass(asset_cache, rate, per)
+            endpoints[kls.name] = kls
+            buckets[kls.name] = RatelimitCache(name=kls.name, expire_time=timedelta(0, per, 0))
+            return kls
+        return wrapper
