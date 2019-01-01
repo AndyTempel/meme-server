@@ -118,7 +118,7 @@ def ratelimit(func, cache=globalcache, max_usage=300):
 
 
 def endpoint_ratelimit(auth, cache=globalcache, max_usage=5):
-    key = r.table('keys').get(auth).run(get_db())
+    key = get_db().get('keys', auth)
     if key['unlimited']:
         return {'X-RateLimit-Limit': 'Unlimited',
                                      'X-RateLimit-Remaining': 'Unlimited',
@@ -132,7 +132,7 @@ def endpoint_ratelimit(auth, cache=globalcache, max_usage=5):
                     'X-RateLimit-Reset': cache.expires_on(key['id'])}
         else:
             ratelimit_reached = key.get('ratelimit_reached', 0) + 1
-            r.table('keys').get(auth).update({"ratelimit_reached": ratelimit_reached}).run(get_db())
+            get_db().update('keys', auth, {"ratelimit_reached": ratelimit_reached})
             if ratelimit_reached % 5 == 0 and 'webhook_url' in config:
                 requests.post(config['webhook_url'],
                               json={"embeds": [{
