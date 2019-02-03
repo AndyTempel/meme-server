@@ -18,13 +18,17 @@ class Crab(Endpoint):
     params = ['text']
 
     def generate(self, avatars, text, usernames, kwargs):
+        name = uuid.uuid4().hex + '.mp4'
+
         @after_this_request
-        def remove(response):
+        def remove(response):  # pylint: disable=W0612
             try:
                 os.remove(name)
-            except Exception:
+            except (FileNotFoundError, OSError, PermissionError):
                 pass
+
             return response
+
         t = text.upper().replace(', ', ',').split(',')
         if len(t) != 2:
             raise BadRequest('You must submit exactly two strings split by comma')
@@ -40,9 +44,7 @@ class Crab(Endpoint):
 
         video = CompositeVideoClip([clip, text.crossfadein(1), text2.crossfadein(1), text3.crossfadein(1)]).set_duration(15.4)
 
-        name = uuid.uuid4().hex + '.mp4'
         video.write_videofile(name, threads=1, preset='superfast', verbose=False, progress_bar=False)
         clip.close()
         video.close()
-
         return send_file(name, mimetype='video/mp4')

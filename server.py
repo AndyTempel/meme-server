@@ -130,7 +130,8 @@ def api(endpoint):
         x = make_response((jsonify({'status': 429, 'error': 'You are being ratelimited'}), 429,
                           {'X-RateLimit-Limit': e_r['X-RateLimit-Limit'],
                            'X-RateLimit-Remaining': 0,
-                           'X-RateLimit-Reset': e_r['X-RateLimit-Reset']}))
+                           'X-RateLimit-Reset': e_r['X-RateLimit-Reset'],
+                           'Retry-After': e_r['Retry-After']}))
         return x
     try:
         result = endpoints[endpoint].run(key=request.headers.get('authorization'),
@@ -139,8 +140,14 @@ def api(endpoint):
                                          usernames=usernames,
                                          kwargs=kwargs)
     except BadRequest as br:
+        traceback.print_exc()
+        if 'sentry_dsn' in config:
+            capture_exception(br)
         return jsonify({'status': 400, 'error': str(br)}), 400
     except IndexError as e:
+        traceback.print_exc()
+        if 'sentry_dsn' in config:
+            capture_exception(e)
         return jsonify({'status': 400, 'error': str(e) + '. Are you missing a parameter?'}), 400
     except Exception as e:
         traceback.print_exc()
