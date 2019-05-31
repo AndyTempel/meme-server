@@ -95,22 +95,22 @@ def ratelimit(func, cache=globalcache, max_usage=300):
             else:
                 ratelimit_reached = key.get('ratelimit_reached', 0) + 1
                 get_db().update('keys', auth, {"ratelimit_reached": ratelimit_reached})
-                if ratelimit_reached % 5 == 0:
-                    if 'webhook_url' in config:
-                        requests.post(config['webhook_url'],
-                                      json={"embeds": [{
-                                          "title": f"Application '{key['name']}' ratelimited 5 times!",
-                                          "description": f"Owner: {key['owner']}\n"
-                                          f"Total: {ratelimit_reached}"}]})
+                if ratelimit_reached % 5 == 0 and 'webhook_url' in config:
+                    requests.post(config['webhook_url'],
+                                  json={"embeds": [{
+                                      "title": f"Application '{key['name']}' ratelimited 5 times!",
+                                      "description": f"Owner: {key['owner']}\n"
+                                      f"Total: {ratelimit_reached}"}]})
+                elif ratelimit_reached % 5 == 0 and 'webhook_url' not in config:
                     requests.post(f"https://{config['postal_host']}/api/v1/send/message", headers={
                         "X-Server-API-Key": config['postal_key']
                     }, json={
                         "to": [key['email']], "from": "RickBot Services <services@is-going-to-rickroll.me>",
                         "subject": "Rate-limit has been hit 5 times!",
-                            "app": key,
                         "tag": "imggen", "html_body": render_env.get_template('rate_limit.html').render({
                             "total_hits": ratelimit_reached,
-                            "client_ip": request.remote_addr
+                            "client_ip": request.remote_addr,
+                            "app": key
                         })
                     })
                 return make_response((jsonify({'status': 429, 'error': 'You are being ratelimited', 'global': True}), 429,
@@ -152,6 +152,18 @@ def endpoint_ratelimit(auth, cache=globalcache, max_usage=5):
                                   "title": f"Application '{key['name']}' ratelimited 5 times!",
                                   "description": f"Owner: {key['owner']}\n"
                                                  f"Total: {ratelimit_reached}"}]})
+            elif ratelimit_reached % 5 == 0 and 'webhook_url' not in config:
+                    requests.post(f"https://{config['postal_host']}/api/v1/send/message", headers={
+                        "X-Server-API-Key": config['postal_key']
+                    }, json={
+                        "to": [key['email']], "from": "RickBot Services <services@is-going-to-rickroll.me>",
+                        "subject": "Rate-limit has been hit 5 times!",
+                        "tag": "imggen", "html_body": render_env.get_template('rate_limit.html').render({
+                            "total_hits": ratelimit_reached,
+                            "client_ip": request.remote_addr,
+                            "app": key
+                        })
+                    })
             return {'X-RateLimit-Limit': max_usage,
                     'X-RateLimit-Remaining': -1,
                     'X-RateLimit-Reset': cache.expires_at(key['id'],),
